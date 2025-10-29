@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#0e1013" />
+    <title>Lord of the Mysty: Pathways</title>
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <div id="app">
+      <canvas id="gameCanvas" width="960" height="540" aria-label="Game viewport"></canvas>
+
+      <div id="hud" aria-live="polite">
+        <div id="hearts" title="Vitality"></div>
+        <div id="objective" title="Current Objective"></div>
+        <div id="statusRight">
+          <span id="timeOfDay">Dawn</span>
+          <span id="fps">0 fps</span>
+        </div>
+      </div>
+
+      <div id="dialogueBox" aria-live="polite" aria-atomic="true"></div>
+
+      <div id="startMenu" class="modal visible" role="dialog" aria-modal="true" aria-labelledby="startTitle">
+        <div class="modal-content">
+          <h1 id="startTitle">Lord of the Mysty</h1>
+          <p class="subtitle">Choose your Pathway to begin your tale.</p>
+          <div class="start-actions">
+            <button id="continueBtn" class="secondary" hidden>Continue</button>
+            <button id="newStoryBtn" class="primary">New Story</button>
+          </div>
+          <div id="pathwaysSection" class="hidden">
+            <h2 class="section-title">Select a Pathway</h2>
+            <div id="pathwaysGrid" class="grid"></div>
+            <div class="grid-legend">
+              <span>22 unique pathways • Exploration and story • Offline-capable</span>
+            </div>
+          </div>
+          <div class="footer-hint">Tip: WASD/Arrows to move • Enter to interact • J for Journal</div>
+        </div>
+      </div>
+
+      <div id="journalModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="journalTitle">
+        <div class="modal-content journal">
+          <h2 id="journalTitle">Journal</h2>
+          <div id="journalEntries" class="journal-entries"></div>
+          <div class="inv-actions">
+            <button id="closeJournalBtn" class="secondary">Close (J)</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('./sw.js').catch(() => {});
+        });
+      }
+    </script>
+    <script src="./game.js" defer></script>
+  </body>
+</html>
