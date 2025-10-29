@@ -14,6 +14,11 @@
 
   const canvas = document.getElementById('gameCanvas');
   const ctx = canvas.getContext('2d', { alpha: false });
+  if(!ctx){
+    // Fallback for very old browsers
+    alert('Canvas 2D is not supported in this browser.');
+    return;
+  }
   const hudEl = document.getElementById('hud');
   const dialogueBox = document.getElementById('dialogueBox');
   const startMenu = document.getElementById('startMenu');

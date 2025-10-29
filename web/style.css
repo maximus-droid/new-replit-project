@@ -1,7 +1,7 @@
 *{box-sizing:border-box}html,body{margin:0;padding:0;background:#0b0d11;color:#dfe7f1;font-family:Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";height:100%;overflow:hidden}
 #app{position:relative;width:100vw;height:100vh}
-#gameCanvas{position:absolute;inset:0;margin:auto;width:100vw;height:100vh;image-rendering:pixelated;background:linear-gradient(#10131a,#0b0d11)}
-#hud{position:absolute;top:8px;left:8px;right:8px;display:flex;align-items:center;justify-content:space-between;gap:12px;pointer-events:none}
+#gameCanvas{position:absolute;inset:0;margin:auto;width:100vw;height:100vh;image-rendering:pixelated;background:linear-gradient(#10131a,#0b0d11);z-index:0}
+#hud{position:absolute;top:8px;left:8px;right:8px;display:flex;align-items:center;justify-content:space-between;gap:12px;pointer-events:none;z-index:20}
 #hearts{display:flex;gap:4px}
 #hearts::before{content:"❤ ❤ ❤ ❤ ❤";letter-spacing:2px;color:#ff6b6b;text-shadow:0 1px 0 #000}
 #objective{flex:1;text-align:center;font-size:13px;color:#cfe4ff;opacity:.95}
@@ -9,9 +9,9 @@
 #hotbar{position:absolute;left:50%;bottom:18px;transform:translateX(-50%);display:flex;gap:6px;padding:6px;background:rgba(10,12,16,.6);border:1px solid rgba(255,255,255,.06);backdrop-filter:blur(6px);border-radius:10px}
 #hotbar .slot{width:42px;height:42px;border:1px solid rgba(255,255,255,.08);border-radius:8px;background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(0,0,0,.12));display:grid;place-items:center;color:#cfe4ff;font-weight:600}
 #hotbar .slot.selected{outline:2px solid #7acaff}
-#dialogueBox{position:absolute;left:50%;top:18px;transform:translateX(-50%);max-width:min(720px,90vw);padding:12px 16px;border-radius:12px;background:rgba(21,24,32,.7);border:1px solid rgba(255,255,255,.08);color:#dfe7f1;font-size:14px;line-height:1.35;display:none;white-space:pre-wrap}
+#dialogueBox{position:absolute;left:50%;top:18px;transform:translateX(-50%);max-width:min(720px,90vw);padding:12px 16px;border-radius:12px;background:rgba(21,24,32,.7);border:1px solid rgba(255,255,255,.08);color:#dfe7f1;font-size:14px;line-height:1.35;display:none;white-space:pre-wrap;z-index:30}
 
-.modal{position:absolute;inset:0;display:none;align-items:center;justify-content:center;padding:20px;background:radial-gradient(1200px 600px at 50% 0%, rgba(100,136,196,.08), rgba(11,13,17,.9))}
+.modal{position:absolute;inset:0;display:none;align-items:center;justify-content:center;padding:20px;background:radial-gradient(1200px 600px at 50% 0%, rgba(100,136,196,.08), rgba(11,13,17,.9));z-index:1000}
 .modal.visible{display:flex}
 .modal .modal-content{width:min(1050px,96vw);max-height:90vh;overflow:auto;background:linear-gradient(180deg,rgba(35,40,52,.8),rgba(18,21,29,.8));border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:20px 20px 14px;box-shadow:0 20px 60px rgba(0,0,0,.45)}
 .modal .modal-content h1{margin:0 0 2px;font-size:32px;letter-spacing:.5px;color:#e6f0ff}
