@@ -14,13 +14,12 @@
 
       <div id="hud" aria-live="polite">
         <div id="hearts" title="Vitality"></div>
+        <div id="objective" title="Current Objective"></div>
         <div id="statusRight">
           <span id="timeOfDay">Dawn</span>
           <span id="fps">0 fps</span>
         </div>
       </div>
-
-      <div id="hotbar" role="toolbar" aria-label="Hotbar"></div>
 
       <div id="dialogueBox" aria-live="polite" aria-atomic="true"></div>
 
@@ -36,19 +35,19 @@
             <h2 class="section-title">Select a Pathway</h2>
             <div id="pathwaysGrid" class="grid"></div>
             <div class="grid-legend">
-              <span>22 unique pathways • No WebGL required • Offline-capable</span>
+              <span>22 unique pathways • Exploration and story • Offline-capable</span>
             </div>
           </div>
-          <div class="footer-hint">Tip: WASD/Arrows to move, Mouse to mine/place, E for inventory</div>
+          <div class="footer-hint">Tip: WASD/Arrows to move • Enter to interact • J for Journal</div>
         </div>
       </div>
 
-      <div id="inventoryModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="invTitle">
-        <div class="modal-content inventory">
-          <h2 id="invTitle">Inventory</h2>
-          <div id="inventoryGrid" class="grid inv-grid"></div>
+      <div id="journalModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="journalTitle">
+        <div class="modal-content journal">
+          <h2 id="journalTitle">Journal</h2>
+          <div id="journalEntries" class="journal-entries"></div>
           <div class="inv-actions">
-            <button id="closeInventoryBtn" class="secondary">Close (E)</button>
+            <button id="closeJournalBtn" class="secondary">Close (J)</button>
           </div>
         </div>
       </div>

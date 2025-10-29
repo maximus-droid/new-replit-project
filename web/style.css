@@ -4,6 +4,7 @@
 #hud{position:absolute;top:8px;left:8px;right:8px;display:flex;align-items:center;justify-content:space-between;gap:12px;pointer-events:none}
 #hearts{display:flex;gap:4px}
 #hearts::before{content:"❤ ❤ ❤ ❤ ❤";letter-spacing:2px;color:#ff6b6b;text-shadow:0 1px 0 #000}
+#objective{flex:1;text-align:center;font-size:13px;color:#cfe4ff;opacity:.95}
 #statusRight{display:flex;gap:10px;font-size:12px;color:#9fb3c8;opacity:.9}
 #hotbar{position:absolute;left:50%;bottom:18px;transform:translateX(-50%);display:flex;gap:6px;padding:6px;background:rgba(10,12,16,.6);border:1px solid rgba(255,255,255,.06);backdrop-filter:blur(6px);border-radius:10px}
 #hotbar .slot{width:42px;height:42px;border:1px solid rgba(255,255,255,.08);border-radius:8px;background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(0,0,0,.12));display:grid;place-items:center;color:#cfe4ff;font-weight:600}
@@ -31,9 +32,9 @@ button:disabled{opacity:.6;cursor:not-allowed}
 .card .startBtn{margin-top:auto;align-self:flex-start}
 .footer-hint{margin-top:12px;font-size:12px;color:#9fb3c8;opacity:.9}
 
-.modal-content.inventory{max-width:900px}
-.inv-grid{grid-template-columns:repeat(auto-fill,minmax(72px,1fr))}
-.inv-slot{height:72px;display:grid;place-items:center;border:1px dashed rgba(255,255,255,.12);border-radius:8px;color:#cfe4ff}
+.modal-content.journal{max-width:900px}
+.journal-entries{display:flex;flex-direction:column;gap:10px}
+.journal-entries .entry{padding:10px;border:1px solid rgba(255,255,255,.08);border-radius:10px;background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(0,0,0,.12));color:#dfe7f1;font-size:14px;line-height:1.35}
 .inv-actions{margin-top:12px;display:flex;justify-content:flex-end}
 
 @media (max-width:720px){

@@ -10,27 +10,26 @@
   const CHUNK_SIZE = 32;                 // tiles per chunk side
   const GRAVITY = 0.35;
   const MAX_FALL_SPEED = 10;
-  const BREAK_RATE_BASE = 0.012;         // per ms
   const SAVE_KEY = 'mysty_save_v1';
 
   const canvas = document.getElementById('gameCanvas');
   const ctx = canvas.getContext('2d', { alpha: false });
   const hudEl = document.getElementById('hud');
-  const hotbarEl = document.getElementById('hotbar');
   const dialogueBox = document.getElementById('dialogueBox');
   const startMenu = document.getElementById('startMenu');
   const continueBtn = document.getElementById('continueBtn');
   const newStoryBtn = document.getElementById('newStoryBtn');
   const pathwaysSection = document.getElementById('pathwaysSection');
   const pathwaysGrid = document.getElementById('pathwaysGrid');
-  const invModal = document.getElementById('inventoryModal');
-  const invGrid = document.getElementById('inventoryGrid');
-  const closeInvBtn = document.getElementById('closeInventoryBtn');
   const timeOfDayEl = document.getElementById('timeOfDay');
   const fpsEl = document.getElementById('fps');
+  const objectiveEl = document.getElementById('objective');
+  const journalModal = document.getElementById('journalModal');
+  const journalEntriesEl = document.getElementById('journalEntries');
+  const closeJournalBtn = document.getElementById('closeJournalBtn');
 
   // State
-  const input = { left:false, right:false, up:false, down:false, jump:false, mine:false, place:false };
+  const input = { left:false, right:false, up:false, down:false, jump:false };
   let camera = { x:0, y:0, scale:1 };
   let paused = false;
   let lastFrameTime = performance.now();
@@ -61,16 +60,7 @@
     [TileId.Workbench]:{ solid:true, breakable:true, hardness:1.2, color:'#b98a56' },
   };
 
-  const ItemId = {
-    Dirt: 'Dirt', Stone: 'Stone', Log: 'Log', Plank: 'Plank', Workbench: 'Workbench'
-  };
-  const BlockItemMap = {
-    [TileId.Dirt]: ItemId.Dirt,
-    [TileId.Stone]: ItemId.Stone,
-    [TileId.Log]: ItemId.Log,
-    [TileId.Plank]: ItemId.Plank,
-    [TileId.Workbench]: ItemId.Workbench,
-  };
+  // No mining/crafting: items removed; world is immutable
 
   // 22 Pathways: place + archetype + flavor + start kit
   const PATHWAYS = [
@@ -127,22 +117,23 @@
   const world = {
     seed: 1337,
     chunks: new Map(), // key -> { tiles: Uint16Array(CHUNK_SIZE*CHUNK_SIZE) }
-    edits: new Map(),  // key:"x,y" -> tileId
+    edits: new Map(),  // reserved for future environment changes
+    pois: new Map(),   // key -> array of POIs
   };
 
   const player = {
     x: 0, y: 0, vx: 0, vy: 0, width: 0.7, height: 1.6,
     spawn: { x: 0, y: 0 },
     onGround: false,
-    inventory: new Map(), // item -> count
-    hotbar: [ItemId.Log, ItemId.Stone, ItemId.Dirt, ItemId.Plank, ItemId.Workbench, null, null, null, null],
-    hotbarIndex: 0,
   };
 
   const story = {
     pathway: null,
     messages: [],
     nextAt: 0,
+    questStage: 0,
+    journal: [],
+    visitedPoiIds: new Set(),
   };
 
   function pushMessage(text){
@@ -152,8 +143,12 @@
     setTimeout(()=>{ if(story.messages[0]===text){ dialogueBox.style.display = 'none'; story.messages.shift(); } }, 6000);
   }
 
-  function addInventory(item, n=1){ player.inventory.set(item, (player.inventory.get(item)||0) + n); rerenderHotbar(); }
-  function takeInventory(item, n=1){ const c=(player.inventory.get(item)||0); if(c<n) return false; if(c===n) player.inventory.delete(item); else player.inventory.set(item,c-n); rerenderHotbar(); return true; }
+  // Journal helpers
+  function addJournalEntry(text){
+    story.journal.push({ t: Date.now(), text });
+    if(journalModal.classList.contains('visible')) renderJournal();
+  }
+  function setObjective(text){ objectiveEl.textContent = text || ''; }
 
   function initStartMenu(){
     const saved = loadGame();
@@ -180,8 +175,9 @@
     const seed = hashInt(Date.now() ^ hashInt([...p.id].reduce((a,c)=>a+ c.charCodeAt(0),0)));
     world.seed = seed;
     story.pathway = p;
-    player.inventory = new Map();
-    Object.entries(p.kit||{}).forEach(([item,count])=> addInventory(item, count));
+    story.questStage = 0;
+    story.journal = [];
+    story.visitedPoiIds = new Set();
 
     // spawn near height 0 crossing
     const spawnX = 0; const spawnY = terrainHeightAtX(spawnX) - 3;
@@ -191,7 +187,8 @@
     hideStartMenu();
 
     pushMessage(`Pathway: ${p.name}. Place: ${p.place}.\nThe myst stirs as your tale begins.`);
-    setTimeout(()=>{ pushMessage('Goal: Gather wood and craft a Workbench.'); }, 3500);
+    addJournalEntry('You arrived in the ' + p.place + '. The myst is watchful.');
+    setObjective('Seek a Shrine and press Enter to attune.');
   }
 
   // Terrain
@@ -216,7 +213,11 @@
   function getChunk(cx, cy){
     const key = chunkKey(cx, cy);
     let ch = world.chunks.get(key);
-    if(!ch){ ch = { tiles: new Uint16Array(CHUNK_SIZE*CHUNK_SIZE) }; generateChunk(cx, cy, ch); world.chunks.set(key, ch); }
+    if(!ch){
+      ch = { tiles: new Uint16Array(CHUNK_SIZE*CHUNK_SIZE) };
+      world.chunks.set(key, ch); // insert before generation to avoid recursion issues
+      generateChunk(cx, cy, ch);
+    }
     return ch;
   }
   function setTile(x, y, id){
@@ -261,7 +262,6 @@
       if(getTile(x, h)===TileId.Grass && valueNoise1D(x*0.13, world.seed+55) > 0.82){
         const height = 3 + Math.floor(valueNoise1D(x*0.5, world.seed+77)*3);
         for(let t=0;t<height;t++) setTile(x, h+t, TileId.Log);
-        // leaves
         for(let dy=-2; dy<=2; dy++){
           for(let dx=-2; dx<=2; dx++){
             if(Math.abs(dx)+Math.abs(dy) <= 3){ setTile(x+dx, h+height+dy, TileId.Leaves); }
@@ -269,6 +269,26 @@
         }
       }
     }
+  }
+
+  // Points of Interest (POIs)
+  function poiId(x,y,type){ return `${type}:${x},${y}`; }
+  function getPOIsForChunk(cx, cy){
+    const key = chunkKey(cx, cy);
+    if(world.pois.has(key)) return world.pois.get(key);
+    const list = [];
+    // 30% chance to spawn a shrine or marker per chunk
+    const r = valueNoise1D((cx+1000)*0.71 + (cy-300)*0.33, world.seed+4242);
+    if(r > 0.7){
+      const lx = Math.floor(valueNoise1D(cx*3.13 + world.seed*0.001, world.seed+77) * CHUNK_SIZE);
+      const x = cx*CHUNK_SIZE + lx;
+      const ySurface = terrainHeightAtX(x);
+      const type = r > 0.88 ? 'shrine' : 'marker';
+      const y = ySurface - 1; // just above ground
+      list.push({ id: poiId(x,y,type), x, y, type });
+    }
+    world.pois.set(key, list);
+    return list;
   }
 
   // Physics
@@ -289,9 +309,9 @@
     if(e.key==='d'||e.key==='D'||e.key==='ArrowRight') input.right=true;
     if(e.key==='w'||e.key==='W'||e.key==='ArrowUp'||e.key===' ') input.jump=true;
     if(e.key==='s'||e.key==='S'||e.key==='ArrowDown') input.down=true;
-    if(e.key==='e'||e.key==='E'){ toggleInventory(); }
     if(e.key==='p'||e.key==='P'){ paused=!paused; }
-    if(e.key>='1'&&e.key<='9') { player.hotbarIndex = parseInt(e.key)-1; rerenderHotbar(); }
+    if(e.key==='j'||e.key==='J'){ toggleJournal(); }
+    if(e.key==='Enter'){ interact(); }
   });
   window.addEventListener('keyup', (e)=>{
     if(e.key==='a'||e.key==='A'||e.key==='ArrowLeft') input.left=false;
@@ -300,68 +320,63 @@
     if(e.key==='s'||e.key==='S'||e.key==='ArrowDown') input.down=false;
   });
 
-  let mouseWorld = { x:0, y:0 };
-  let mouseDown = false; let breaking = null;
   canvas.addEventListener('contextmenu', e => e.preventDefault());
-  canvas.addEventListener('mousedown', (e)=>{ mouseDown = true; if(e.button===0){ startBreaking(); } else if(e.button===2){ placeAtCursor(); } });
-  window.addEventListener('mouseup', ()=>{ mouseDown = false; breaking = null; });
-  window.addEventListener('mousemove', (e)=>{
-    const rect = canvas.getBoundingClientRect();
-    const mx = (e.clientX - rect.left) / rect.width * canvas.width;
-    const my = (e.clientY - rect.top) / rect.height * canvas.height;
-    mouseWorld.x = (mx / (TILE_SIZE*camera.scale)) + camera.x;
-    mouseWorld.y = (my / (TILE_SIZE*camera.scale)) + camera.y;
-  });
 
-  function startBreaking(){
-    const tx = Math.floor(mouseWorld.x), ty = Math.floor(mouseWorld.y);
-    const id = getTile(tx, ty);
-    if(id===TileId.Air||!TileProps[id].breakable) return;
-    breaking = { tx, ty, id, progress:0, startedAt:performance.now() };
-  }
-  function placeAtCursor(){
-    const tx = Math.floor(mouseWorld.x), ty = Math.floor(mouseWorld.y);
-    const below = getTile(tx, ty);
-    if(below!==TileId.Air) return;
-    const item = player.hotbar[player.hotbarIndex];
-    if(!item) return;
-    let tile = TileId.Air;
-    if(item===ItemId.Dirt) tile = TileId.Dirt;
-    if(item===ItemId.Stone) tile = TileId.Stone;
-    if(item===ItemId.Log) tile = TileId.Log;
-    if(item===ItemId.Plank) tile = TileId.Plank;
-    if(item===ItemId.Workbench) tile = TileId.Workbench;
-    if(tile!==TileId.Air && takeInventory(item, 1)){
-      setTile(tx, ty, tile);
-      saveGameThrottled();
+  // Interactions
+  function interact(){
+    const near = findNearbyPOI();
+    if(!near) return;
+    if(story.visitedPoiIds.has(near.id)){
+      pushMessage(near.type==='shrine' ? 'The shrine hums softly.' : 'A weathered marker.');
+      return;
     }
+    story.visitedPoiIds.add(near.id);
+    if(near.type==='shrine'){
+      if(story.questStage===0){
+        pushMessage('You attune to the Shrine. The myst knows your name.');
+        addJournalEntry('Attuned at a Shrine. A thread tugged me toward the horizon.');
+        story.questStage = 1;
+        setObjective('Follow the myst: seek higher ground for a sign.');
+      } else {
+        pushMessage('The Shrine offers a quiet blessing.');
+      }
+    } else if(near.type==='marker'){
+      pushMessage('Carved runes speak of storms and vows.');
+      addJournalEntry('Found a weathered marker. Its runes mention storms and vows.');
+    }
+    saveGameThrottled();
+  }
+  function findNearbyPOI(){
+    // look in current and neighboring chunks
+    const cx = tileChunkCoord(Math.floor(player.x));
+    const cy = tileChunkCoord(Math.floor(player.y));
+    let nearest = null; let nd = 9999;
+    for(let dy=-1; dy<=1; dy++){
+      for(let dx=-1; dx<=1; dx++){
+        const list = getPOIsForChunk(cx+dx, cy+dy);
+        for(const poi of list){
+          const px = player.x + player.width/2; const py = player.y + player.height/2;
+          const d = Math.hypot(poi.x+0.5 - px, poi.y+0.5 - py);
+          if(d < nd){ nd = d; nearest = poi; }
+        }
+      }
+    }
+    return nd <= 2.0 ? nearest : null;
   }
 
-  // Inventory UI
-  function rerenderHotbar(){
-    hotbarEl.replaceChildren();
-    for(let i=0;i<9;i++){
-      const slot = document.createElement('div');
-      slot.className = 'slot' + (player.hotbarIndex===i?' selected':'');
-      const item = player.hotbar[i];
-      if(item){
-        const count = player.inventory.get(item)||0; slot.textContent = item.slice(0,2).toUpperCase() + (count?` ${count}`:'');
-      } else { slot.textContent = ''; }
-      slot.onclick = ()=>{ player.hotbarIndex=i; rerenderHotbar(); };
-      hotbarEl.appendChild(slot);
-    }
+  // Journal UI
+  function toggleJournal(){
+    if(journalModal.classList.contains('visible')){ journalModal.classList.remove('visible'); journalModal.style.display='none'; }
+    else { journalModal.classList.add('visible'); journalModal.style.display='flex'; renderJournal(); }
   }
-  function toggleInventory(){
-    if(invModal.classList.contains('visible')){ invModal.classList.remove('visible'); invModal.style.display='none'; }
-    else{ invModal.classList.add('visible'); invModal.style.display='flex'; renderInventory(); }
-  }
-  closeInvBtn.onclick = ()=> toggleInventory();
-  function renderInventory(){
-    invGrid.replaceChildren();
-    const items = Array.from(player.inventory.entries());
-    items.sort((a,b)=> a[0].localeCompare(b[0]));
-    items.forEach(([item,count])=>{
-      const s = document.createElement('div'); s.className='inv-slot'; s.textContent = `${item} x${count}`; invGrid.appendChild(s);
+  closeJournalBtn.onclick = ()=> toggleJournal();
+  function renderJournal(){
+    journalEntriesEl.replaceChildren();
+    story.journal.forEach(entry => {
+      const div = document.createElement('div'); div.className='entry';
+      const d = new Date(entry.t); const hh = d.getHours().toString().padStart(2,'0'); const mm = d.getMinutes().toString().padStart(2,'0');
+      div.textContent = `[${hh}:${mm}] ` + entry.text;
+      journalEntriesEl.appendChild(div);
     });
   }
 
@@ -371,8 +386,8 @@
       v: GAME_VERSION,
       seed: world.seed,
       pathway: story.pathway?.id || null,
-      player: { x: player.x, y: player.y, inv: Array.from(player.inventory.entries()), hotbar: player.hotbar, hotbarIndex: player.hotbarIndex },
-      edits: Array.from(world.edits.entries()),
+      player: { x: player.x, y: player.y },
+      story: { questStage: story.questStage, journal: story.journal, visited: Array.from(story.visitedPoiIds) },
     };
     localStorage.setItem(SAVE_KEY, JSON.stringify(data));
   }
@@ -382,15 +397,14 @@
     world.seed = data.seed || world.seed;
     story.pathway = PATHWAYS.find(p=>p.id===data.pathway) || PATHWAYS[0];
     player.x = data.player?.x ?? 0; player.y = data.player?.y ?? 0; player.vx=0; player.vy=0;
-    player.inventory = new Map(data.player?.inv || []);
-    player.hotbar = data.player?.hotbar || player.hotbar; player.hotbarIndex = data.player?.hotbarIndex || 0;
-    world.edits.clear(); (data.edits||[]).forEach(([k,v])=>world.edits.set(k,v));
-    rerenderHotbar();
+    const s = data.story || {};
+    story.questStage = s.questStage || 0;
+    story.journal = Array.isArray(s.journal) ? s.journal : [];
+    story.visitedPoiIds = new Set(Array.isArray(s.visited)? s.visited : []);
+    setObjective(story.questStage===0 ? 'Seek a Shrine and press Enter to attune.' : 'Follow the myst: seek higher ground for a sign.');
   }
 
-  // Crafting (very minimal)
-  function craftWorkbench(){ if(takeInventory(ItemId.Log, 4)){ addInventory(ItemId.Workbench,1); pushMessage('Crafted: Workbench'); return true; } return false; }
-  window.addEventListener('keydown',(e)=>{ if(e.key==='c'||e.key==='C'){ if(craftWorkbench()) saveGameThrottled(); }});
+  // No crafting
 
   // Game loop
   function step(dt){
@@ -425,27 +439,14 @@
       player.vy = 0;
     }
 
-    // Mining
-    if(mouseDown && breaking){
-      const {tx,ty,id} = breaking; if(getTile(tx,ty)!==id){ breaking=null; }
-      else { breaking.progress += dt * BREAK_RATE_BASE / Math.max(0.2, TileProps[id].hardness);
-        if(breaking.progress >= 1){
-          setTile(tx,ty,TileId.Air); const drop = BlockItemMap[id]; if(drop) addInventory(drop,1);
-          breaking=null; saveGameThrottled();
-          if(drop===ItemId.Log){ maybeAdvanceStory('wood'); }
-        }
-      }
-    }
+    // No mining
 
     // Camera
     camera.x = player.x - (canvas.width/(TILE_SIZE*camera.scale))/2 + player.width/2;
     camera.y = player.y - (canvas.height/(TILE_SIZE*camera.scale))/2 + player.height/2;
   }
 
-  function maybeAdvanceStory(event){
-    if(!story.pathway) return;
-    if(event==='wood'){ pushMessage('The myst answers: craft a Workbench (press C).'); }
-  }
+  // Story advancement is handled via POI interactions
 
   function draw(){
     // sky background gradient based on time of day
@@ -474,10 +475,27 @@
       }
     }
 
-    // selection highlight
-    const selx = Math.floor(mouseWorld.x), sely = Math.floor(mouseWorld.y);
-    ctx.strokeStyle = 'rgba(255,255,255,0.7)'; ctx.lineWidth = 1/ (TILE_SIZE*camera.scale);
-    ctx.strokeRect(selx, sely, 1, 1);
+    // draw POIs
+    const cx0 = tileChunkCoord(x0), cy0 = tileChunkCoord(y0);
+    const cx1 = tileChunkCoord(x1), cy1 = tileChunkCoord(y1);
+    for(let cy=cy0; cy<=cy1; cy++){
+      for(let cx=cx0; cx<=cx1; cx++){
+        const list = getPOIsForChunk(cx, cy);
+        for(const poi of list){
+          if(poi.x>=x0-2 && poi.x<=x1+2 && poi.y>=y0-6 && poi.y<=y1+6){
+            if(poi.type==='shrine'){
+              ctx.fillStyle = '#cfe4ff';
+              ctx.fillRect(poi.x-0.2, poi.y-1.5, 1.4, 2.2);
+              ctx.fillStyle = '#7acaff';
+              ctx.fillRect(poi.x+0.1, poi.y-1.3, 0.8, 1.8);
+            } else {
+              ctx.fillStyle = '#b9c6d4';
+              ctx.fillRect(poi.x+0.1, poi.y-1, 0.6, 1.4);
+            }
+          }
+        }
+      }
+    }
 
     // player
     ctx.fillStyle = '#ffd28a';
@@ -506,7 +524,6 @@
   ensureCanvasSize();
 
   function bootstrap(){
-    rerenderHotbar();
     initStartMenu();
     const saved = loadGame(); if(saved){ startMenu.classList.add('visible'); startMenu.style.display='flex'; } else { startMenu.classList.add('visible'); startMenu.style.display='flex'; }
     requestAnimationFrame(frame);
