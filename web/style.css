@@ -1,0 +1,42 @@
+*{box-sizing:border-box}html,body{margin:0;padding:0;background:#0b0d11;color:#dfe7f1;font-family:Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";height:100%;overflow:hidden}
+#app{position:relative;width:100vw;height:100vh}
+#gameCanvas{position:absolute;inset:0;margin:auto;width:100vw;height:100vh;image-rendering:pixelated;background:linear-gradient(#10131a,#0b0d11)}
+#hud{position:absolute;top:8px;left:8px;right:8px;display:flex;align-items:center;justify-content:space-between;gap:12px;pointer-events:none}
+#hearts{display:flex;gap:4px}
+#hearts::before{content:"❤ ❤ ❤ ❤ ❤";letter-spacing:2px;color:#ff6b6b;text-shadow:0 1px 0 #000}
+#statusRight{display:flex;gap:10px;font-size:12px;color:#9fb3c8;opacity:.9}
+#hotbar{position:absolute;left:50%;bottom:18px;transform:translateX(-50%);display:flex;gap:6px;padding:6px;background:rgba(10,12,16,.6);border:1px solid rgba(255,255,255,.06);backdrop-filter:blur(6px);border-radius:10px}
+#hotbar .slot{width:42px;height:42px;border:1px solid rgba(255,255,255,.08);border-radius:8px;background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(0,0,0,.12));display:grid;place-items:center;color:#cfe4ff;font-weight:600}
+#hotbar .slot.selected{outline:2px solid #7acaff}
+#dialogueBox{position:absolute;left:50%;top:18px;transform:translateX(-50%);max-width:min(720px,90vw);padding:12px 16px;border-radius:12px;background:rgba(21,24,32,.7);border:1px solid rgba(255,255,255,.08);color:#dfe7f1;font-size:14px;line-height:1.35;display:none;white-space:pre-wrap}
+
+.modal{position:absolute;inset:0;display:none;align-items:center;justify-content:center;padding:20px;background:radial-gradient(1200px 600px at 50% 0%, rgba(100,136,196,.08), rgba(11,13,17,.9))}
+.modal.visible{display:flex}
+.modal .modal-content{width:min(1050px,96vw);max-height:90vh;overflow:auto;background:linear-gradient(180deg,rgba(35,40,52,.8),rgba(18,21,29,.8));border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:20px 20px 14px;box-shadow:0 20px 60px rgba(0,0,0,.45)}
+.modal .modal-content h1{margin:0 0 2px;font-size:32px;letter-spacing:.5px;color:#e6f0ff}
+.subtitle{margin:0 0 18px;font-size:14px;color:#9fb3c8}
+.start-actions{display:flex;gap:10px;margin-bottom:12px}
+button{appearance:none;border:none;border-radius:10px;padding:10px 14px;font-size:14px;font-weight:600;color:#0b0d11;cursor:pointer}
+button.primary{background:#7acaff}
+button.secondary{background:#ccd6e0}
+button:disabled{opacity:.6;cursor:not-allowed}
+.hidden{display:none}
+.section-title{margin:10px 0 10px;font-size:18px;color:#cde2ff}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.card{border:1px solid rgba(255,255,255,.08);background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(0,0,0,.14));border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:6px}
+.card h3{margin:0;font-size:16px;color:#e7f2ff}
+.badge{display:inline-flex;gap:6px;align-items:center;font-size:12px;color:#a8c4e6}
+.badge .dot{width:8px;height:8px;border-radius:999px;display:inline-block}
+.card p{margin:2px 0 0;font-size:13px;color:#b9c6d4}
+.card .startBtn{margin-top:auto;align-self:flex-start}
+.footer-hint{margin-top:12px;font-size:12px;color:#9fb3c8;opacity:.9}
+
+.modal-content.inventory{max-width:900px}
+.inv-grid{grid-template-columns:repeat(auto-fill,minmax(72px,1fr))}
+.inv-slot{height:72px;display:grid;place-items:center;border:1px dashed rgba(255,255,255,.12);border-radius:8px;color:#cfe4ff}
+.inv-actions{margin-top:12px;display:flex;justify-content:flex-end}
+
+@media (max-width:720px){
+  #hearts{transform:scale(.9)}
+  #hotbar .slot{width:36px;height:36px}
+}
