@@ -280,21 +280,27 @@
 </head>
 <body>
     <nav>
-        <div>
+        <div class="brand">
             <h1>Story Nexus</h1>
-            <p style="color: var(--muted); font-size: 0.9rem; margin-top: 0.35rem;">Local-first workspace for writers</p>
+            <p>Local-first workspace for writers</p>
         </div>
-        <div>
-            <button id="export-data">Export Workspace JSON</button>
-            <label style="all: unset; display: block; width:100%;">
-                <span style="font-size: 0.85rem; color: var(--muted); display:block; margin-bottom:0.4rem;">Import Workspace JSON</span>
-                <input id="import-data" type="file" accept="application/json" style="display:block; width:100%;" />
+        <div class="tab-buttons">
+            <button data-tab-target="writing" class="active">Writing Desk</button>
+            <button data-tab-target="plotlines">Plotlines & Timeline</button>
+            <button data-tab-target="characters">Character Gallery</button>
+            <button data-tab-target="relationships">Relationship Map</button>
+        </div>
+        <div class="nav-actions">
+            <button id="export-data">Export JSON</button>
+            <label class="import-label">
+                <span>Import JSON</span>
+                <input id="import-data" type="file" accept="application/json" />
             </label>
-            <button id="reset-workspace" style="margin-top: 0.75rem;">Reset Workspace</button>
+            <button id="reset-workspace" class="danger">Reset Workspace</button>
         </div>
     </nav>
     <main>
-        <section class="panel">
+        <section class="panel tab-panel active" data-tab="writing">
             <h2>Writing Desk</h2>
             <div class="section-grid two-col">
                 <div>
@@ -333,7 +339,7 @@
             </div>
         </section>
 
-        <section class="panel">
+        <section class="panel tab-panel" data-tab="plotlines">
             <h2>Plotlines & Timeline</h2>
             <div class="meta-group">
                 <label>
@@ -356,7 +362,7 @@
             <div id="timeline"></div>
         </section>
 
-        <section class="panel">
+        <section class="panel tab-panel" data-tab="characters">
             <h2>Character Gallery</h2>
             <div class="meta-group">
                 <label>
@@ -382,7 +388,7 @@
             <div class="character-grid" id="character-grid" style="margin-top: 1.5rem;"></div>
         </section>
 
-        <section class="panel">
+        <section class="panel tab-panel" data-tab="relationships">
             <h2>Relationship Map</h2>
             <div class="meta-group">
                 <label>
