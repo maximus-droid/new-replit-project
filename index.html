@@ -31,31 +31,39 @@
             backdrop-filter: blur(16px);
             background-color: rgba(15, 23, 42, 0.8);
             border-right: 1px solid var(--border);
-            padding: 1.5rem 1.25rem;
+            padding: 1.75rem 1.25rem;
             display: flex;
             flex-direction: column;
-            gap: 1.5rem;
+            gap: 1.75rem;
         }
 
-        nav h1 {
+        nav .brand h1 {
             margin: 0;
-            font-size: 1.5rem;
+            font-size: 1.45rem;
             letter-spacing: 0.04em;
         }
 
-        nav button {
+        nav .brand p {
+            margin: 0.45rem 0 0;
+            color: var(--muted);
+            font-size: 0.85rem;
+        }
+
+        nav button,
+        .pill-button {
             all: unset;
             cursor: pointer;
             padding: 0.65rem 0.85rem;
             border-radius: 0.6rem;
-            background: rgba(148, 163, 184, 0.1);
+            background: rgba(148, 163, 184, 0.12);
             color: inherit;
             text-align: center;
             border: 1px solid transparent;
-            transition: background 0.2s ease, transform 0.2s ease;
+            transition: background 0.2s ease, transform 0.2s ease, border 0.2s ease;
         }
 
-        nav button:hover {
+        nav button:hover,
+        .pill-button:hover {
             border-color: rgba(148, 163, 184, 0.2);
             transform: translateY(-1px);
         }
@@ -63,6 +71,53 @@
         nav button.active {
             background: rgba(56, 189, 248, 0.2);
             border-color: rgba(56, 189, 248, 0.4);
+        }
+
+        .tab-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+        }
+
+        .nav-actions {
+            margin-top: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 0.65rem;
+        }
+
+        .nav-actions button {
+            text-transform: none;
+        }
+
+        .nav-actions .danger {
+            background: rgba(248, 113, 113, 0.12);
+            border-color: rgba(248, 113, 113, 0.2);
+        }
+
+        .nav-actions .danger:hover {
+            border-color: rgba(248, 113, 113, 0.35);
+        }
+
+        .import-label {
+            position: relative;
+            border: 1px dashed rgba(148, 163, 184, 0.25);
+            border-radius: 0.6rem;
+            padding: 0.65rem 0.85rem;
+            text-align: center;
+            cursor: pointer;
+            background: rgba(148, 163, 184, 0.08);
+            color: inherit;
+            transition: border 0.2s ease, background 0.2s ease;
+        }
+
+        .import-label:hover {
+            border-color: rgba(56, 189, 248, 0.35);
+            background: rgba(56, 189, 248, 0.12);
+        }
+
+        .import-label input {
+            display: none;
         }
 
         main {
@@ -88,31 +143,66 @@
             letter-spacing: 0.03em;
         }
 
+        .tab-panel {
+            display: none;
+        }
+
+        .tab-panel.active {
+            display: block;
+        }
+
         .section-grid {
             display: grid;
             gap: 1.5rem;
         }
 
-        .two-col {
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        .doc-layout {
+            display: grid;
+            grid-template-columns: 240px 1fr;
+            gap: 1.5rem;
+            align-items: flex-start;
+        }
+
+        .scene-outline {
+            background: rgba(15, 23, 42, 0.55);
+            border-radius: 0.85rem;
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            height: 100%;
+        }
+
+        .outline-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .outline-header h3 {
+            margin: 0;
+            font-size: 1rem;
+            color: #e2e8f0;
         }
 
         .scene-list {
             display: flex;
             flex-direction: column;
             gap: 0.75rem;
-            max-height: 350px;
             overflow-y: auto;
-            padding-right: 0.5rem;
+            max-height: calc(100vh - 240px);
+            padding-right: 0.35rem;
         }
 
         .scene-card {
-            background: rgba(30, 41, 59, 0.6);
+            background: rgba(30, 41, 59, 0.65);
             border-radius: 0.75rem;
-            padding: 0.75rem;
+            padding: 0.8rem;
             border: 1px solid transparent;
             cursor: pointer;
-            transition: border 0.2s ease, transform 0.2s ease;
+            transition: border 0.2s ease, transform 0.2s ease, background 0.2s ease;
         }
 
         .scene-card:hover {
@@ -122,7 +212,73 @@
 
         .scene-card.active {
             border-color: rgba(56, 189, 248, 0.55);
-            background: rgba(56, 189, 248, 0.12);
+            background: rgba(56, 189, 248, 0.18);
+        }
+
+        .doc-surface {
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        .doc-toolbar {
+            background: rgba(15, 23, 42, 0.55);
+            border-radius: 0.85rem;
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            padding: 0.9rem 1.1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .doc-title-input {
+            flex: 1;
+            background: transparent;
+            border: 1px solid transparent;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.25);
+            font-size: 1.3rem;
+            padding: 0.25rem 0.5rem;
+            color: #f1f5f9;
+            border-radius: 0.35rem;
+        }
+
+        .doc-title-input:focus {
+            outline: none;
+            border-color: rgba(56, 189, 248, 0.55);
+            background: rgba(56, 189, 248, 0.08);
+        }
+
+        .doc-toolbar-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .doc-toolbar-actions button {
+            padding-inline: 0.95rem;
+        }
+
+        .doc-meta-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+            color: #f1f5f9;
+        }
+
+        .doc-meta-grid label span {
+            font-size: 0.85rem;
+            color: var(--muted);
+        }
+
+        .meta-field {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            color: var(--muted);
+        }
+
+        .meta-field-label {
+            font-size: 0.85rem;
         }
 
         .meta-group {
@@ -152,14 +308,49 @@
             resize: vertical;
         }
 
+        .doc-page {
+            background: #f8fafc;
+            border-radius: 1.1rem;
+            padding: 1.75rem 2.25rem;
+            box-shadow: 0 25px 40px rgba(15, 23, 42, 0.35);
+            border: 1px solid rgba(148, 163, 184, 0.15);
+        }
+
         .quill-wrapper {
-            background: rgba(30, 41, 59, 0.45);
+            background: transparent;
             border-radius: 0.75rem;
-            border: 1px solid rgba(148, 163, 184, 0.25);
+            border: 1px solid rgba(148, 163, 184, 0.3);
         }
 
         #editor {
-            height: 320px;
+            height: 520px;
+        }
+
+        .doc-page .ql-toolbar {
+            border-radius: 0.6rem 0.6rem 0 0;
+            background: #f1f5f9;
+        }
+
+        .doc-page .ql-container {
+            border-radius: 0 0 0.6rem 0.6rem;
+            background: #ffffff;
+            border: 1px solid rgba(148, 163, 184, 0.35);
+            border-top: none;
+        }
+
+        .doc-page .ql-editor {
+            min-height: 440px;
+            font-size: 1.05rem;
+            line-height: 1.7;
+            color: #0f172a;
+        }
+
+        .doc-page .ql-editor p {
+            margin: 0 0 0.95rem;
+        }
+
+        .doc-meta-grid label {
+            color: var(--muted);
         }
 
         .chip-list {
@@ -213,14 +404,42 @@
             gap: 0.5rem;
         }
 
-        .inline-actions button {
+        .inline-actions button,
+        .doc-toolbar-actions button,
+        .outline-actions button {
+            all: unset;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.55rem 0.95rem;
+            border-radius: 0.6rem;
+            cursor: pointer;
             background: rgba(56, 189, 248, 0.18);
-            border-color: rgba(56, 189, 248, 0.35);
+            border: 1px solid rgba(56, 189, 248, 0.35);
+            color: inherit;
+            transition: transform 0.2s ease, border 0.2s ease, box-shadow 0.2s ease;
         }
 
-        .inline-actions button.danger {
+        .inline-actions button.danger,
+        .doc-toolbar-actions button.danger,
+        .outline-actions button.danger {
             background: rgba(248, 113, 113, 0.18);
             border-color: rgba(248, 113, 113, 0.35);
+        }
+
+        .inline-actions button:hover,
+        .doc-toolbar-actions button:hover,
+        .outline-actions button:hover {
+            transform: translateY(-1px);
+            border-color: rgba(56, 189, 248, 0.55);
+            box-shadow: 0 6px 18px rgba(56, 189, 248, 0.15);
+        }
+
+        .inline-actions button.danger:hover,
+        .doc-toolbar-actions button.danger:hover,
+        .outline-actions button.danger:hover {
+            border-color: rgba(248, 113, 113, 0.55);
+            box-shadow: 0 6px 18px rgba(248, 113, 113, 0.18);
         }
 
         #timeline {
@@ -251,25 +470,41 @@
             font-size: 0.75rem;
         }
 
-        @media (max-width: 960px) {
+        .outline-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        @media (max-width: 1080px) {
             body {
                 grid-template-columns: 1fr;
             }
 
             nav {
-                flex-direction: row;
-                align-items: center;
-                justify-content: space-between;
-                gap: 0.75rem;
+                flex-direction: column;
+                align-items: stretch;
                 position: sticky;
                 top: 0;
                 z-index: 10;
             }
 
-            nav div {
-                display: flex;
-                gap: 0.5rem;
+            .tab-buttons {
+                flex-direction: row;
                 flex-wrap: wrap;
+            }
+
+            nav button {
+                flex: 1 1 45%;
+                text-align: center;
+            }
+
+            .doc-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .scene-outline {
+                order: 2;
+                flex-direction: column;
             }
 
             main {
@@ -301,39 +536,42 @@
     </nav>
     <main>
         <section class="panel tab-panel active" data-tab="writing">
-            <h2>Writing Desk</h2>
-            <div class="section-grid two-col">
-                <div>
-                    <div class="inline-actions" style="margin-bottom: 0.75rem;">
-                        <button id="new-scene">New Scene</button>
-                        <button id="duplicate-scene">Duplicate Scene</button>
-                        <button id="delete-scene" class="danger">Delete Scene</button>
+            <div class="doc-layout">
+                <aside class="scene-outline">
+                    <div class="outline-header">
+                        <h3>Scenes</h3>
+                        <div class="outline-actions">
+                            <button id="new-scene">New Scene</button>
+                        </div>
                     </div>
                     <div class="scene-list" id="scene-list"></div>
-                </div>
-                <div>
-                    <div class="meta-group">
+                </aside>
+                <div class="doc-surface">
+                    <div class="doc-toolbar">
+                        <input id="scene-title" class="doc-title-input" placeholder="Untitled scene" />
+                        <div class="doc-toolbar-actions">
+                            <button id="duplicate-scene">Duplicate</button>
+                            <button id="delete-scene" class="danger">Delete</button>
+                        </div>
+                    </div>
+                    <div class="doc-meta-grid">
                         <label>
-                            Scene Title
-                            <input id="scene-title" placeholder="Enter scene title" />
-                        </label>
-                        <label>
-                            Plotline
+                            <span>Plotline</span>
                             <select id="scene-plotline"></select>
                         </label>
                         <label>
-                            Scene Date
+                            <span>Scene Date</span>
                             <input id="scene-date" type="date" />
                         </label>
+                        <div class="meta-field">
+                            <span class="meta-field-label">Characters in Scene</span>
+                            <div id="scene-characters" class="chip-list checkbox-list"></div>
+                        </div>
                     </div>
-                    <div>
-                        <label>
-                            Characters in Scene
-                            <div id="scene-characters" class="chip-list"></div>
-                        </label>
-                    </div>
-                    <div class="quill-wrapper">
-                        <div id="editor"></div>
+                    <div class="doc-page">
+                        <div class="quill-wrapper">
+                            <div id="editor"></div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -906,6 +1144,47 @@
             target.innerHTML = options.join("");
         }
 
+        function initTabs() {
+            const buttons = document.querySelectorAll('[data-tab-target]');
+            const panels = document.querySelectorAll('.tab-panel');
+
+            const activate = (target) => {
+                buttons.forEach((btn) => btn.classList.toggle('active', btn.dataset.tabTarget === target));
+                panels.forEach((panel) => panel.classList.toggle('active', panel.dataset.tab === target));
+
+                if (target === 'plotlines' && timeline) {
+                    setTimeout(() => {
+                        timeline.redraw();
+                        try {
+                            timeline.fit();
+                        } catch (error) {
+                            console.debug('Timeline fit skipped', error);
+                        }
+                    }, 50);
+                }
+
+                if (target === 'relationships' && cy) {
+                    setTimeout(() => {
+                        cy.resize();
+                        cy.fit();
+                    }, 60);
+                }
+
+                if (target === 'writing') {
+                    setTimeout(() => {
+                        quill.focus();
+                    }, 80);
+                }
+            };
+
+            buttons.forEach((button) => {
+                button.addEventListener('click', () => activate(button.dataset.tabTarget));
+            });
+
+            const initial = document.querySelector('[data-tab-target].active')?.dataset.tabTarget || 'writing';
+            activate(initial);
+        }
+
         document.getElementById("new-scene").addEventListener("click", () => {
             const id = createId();
             const scene = {
@@ -1191,6 +1470,7 @@
 
         initTimeline();
         initGraph();
+        initTabs();
         initAll();
 
         if (!activeSceneId && state.scenes.length) {
