@@ -1,0 +1,1481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Story Nexus Workspace</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.snow.css" />
+    <link rel="stylesheet" href="https://unpkg.com/vis-timeline@7.7.1/styles/vis-timeline-graph2d.min.css" />
+    <style>
+        :root {
+            color-scheme: light dark;
+            font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            --bg: #0f172a;
+            --panel: rgba(15, 23, 42, 0.7);
+            --accent: #38bdf8;
+            --muted: #94a3b8;
+            --border: rgba(148, 163, 184, 0.2);
+        }
+
+        body {
+            margin: 0;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 35%, #111827 100%);
+            color: #e2e8f0;
+            min-height: 100vh;
+            display: grid;
+            grid-template-columns: 300px 1fr;
+        }
+
+        nav {
+            backdrop-filter: blur(16px);
+            background-color: rgba(15, 23, 42, 0.8);
+            border-right: 1px solid var(--border);
+            padding: 1.75rem 1.25rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.75rem;
+        }
+
+        nav .brand h1 {
+            margin: 0;
+            font-size: 1.45rem;
+            letter-spacing: 0.04em;
+        }
+
+        nav .brand p {
+            margin: 0.45rem 0 0;
+            color: var(--muted);
+            font-size: 0.85rem;
+        }
+
+        nav button,
+        .pill-button {
+            all: unset;
+            cursor: pointer;
+            padding: 0.65rem 0.85rem;
+            border-radius: 0.6rem;
+            background: rgba(148, 163, 184, 0.12);
+            color: inherit;
+            text-align: center;
+            border: 1px solid transparent;
+            transition: background 0.2s ease, transform 0.2s ease, border 0.2s ease;
+        }
+
+        nav button:hover,
+        .pill-button:hover {
+            border-color: rgba(148, 163, 184, 0.2);
+            transform: translateY(-1px);
+        }
+
+        nav button.active {
+            background: rgba(56, 189, 248, 0.2);
+            border-color: rgba(56, 189, 248, 0.4);
+        }
+
+        .tab-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+        }
+
+        .nav-actions {
+            margin-top: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 0.65rem;
+        }
+
+        .nav-actions button {
+            text-transform: none;
+        }
+
+        .nav-actions .danger {
+            background: rgba(248, 113, 113, 0.12);
+            border-color: rgba(248, 113, 113, 0.2);
+        }
+
+        .nav-actions .danger:hover {
+            border-color: rgba(248, 113, 113, 0.35);
+        }
+
+        .import-label {
+            position: relative;
+            border: 1px dashed rgba(148, 163, 184, 0.25);
+            border-radius: 0.6rem;
+            padding: 0.65rem 0.85rem;
+            text-align: center;
+            cursor: pointer;
+            background: rgba(148, 163, 184, 0.08);
+            color: inherit;
+            transition: border 0.2s ease, background 0.2s ease;
+        }
+
+        .import-label:hover {
+            border-color: rgba(56, 189, 248, 0.35);
+            background: rgba(56, 189, 248, 0.12);
+        }
+
+        .import-label input {
+            display: none;
+        }
+
+        main {
+            overflow-y: auto;
+            padding: 1.5rem 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .panel {
+            backdrop-filter: blur(18px);
+            background: rgba(15, 23, 42, 0.65);
+            border: 1px solid var(--border);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.4);
+        }
+
+        .panel h2 {
+            margin-top: 0;
+            font-size: 1.25rem;
+            letter-spacing: 0.03em;
+        }
+
+        .tab-panel {
+            display: none;
+        }
+
+        .tab-panel.active {
+            display: block;
+        }
+
+        .section-grid {
+            display: grid;
+            gap: 1.5rem;
+        }
+
+        .doc-layout {
+            display: grid;
+            grid-template-columns: 240px 1fr;
+            gap: 1.5rem;
+            align-items: flex-start;
+        }
+
+        .scene-outline {
+            background: rgba(15, 23, 42, 0.55);
+            border-radius: 0.85rem;
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            height: 100%;
+        }
+
+        .outline-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .outline-header h3 {
+            margin: 0;
+            font-size: 1rem;
+            color: #e2e8f0;
+        }
+
+        .scene-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            overflow-y: auto;
+            max-height: calc(100vh - 240px);
+            padding-right: 0.35rem;
+        }
+
+        .scene-card {
+            background: rgba(30, 41, 59, 0.65);
+            border-radius: 0.75rem;
+            padding: 0.8rem;
+            border: 1px solid transparent;
+            cursor: pointer;
+            transition: border 0.2s ease, transform 0.2s ease, background 0.2s ease;
+        }
+
+        .scene-card:hover {
+            border-color: rgba(56, 189, 248, 0.35);
+            transform: translateY(-1px);
+        }
+
+        .scene-card.active {
+            border-color: rgba(56, 189, 248, 0.55);
+            background: rgba(56, 189, 248, 0.18);
+        }
+
+        .doc-surface {
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        .doc-toolbar {
+            background: rgba(15, 23, 42, 0.55);
+            border-radius: 0.85rem;
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            padding: 0.9rem 1.1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .doc-title-input {
+            flex: 1;
+            background: transparent;
+            border: 1px solid transparent;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.25);
+            font-size: 1.3rem;
+            padding: 0.25rem 0.5rem;
+            color: #f1f5f9;
+            border-radius: 0.35rem;
+        }
+
+        .doc-title-input:focus {
+            outline: none;
+            border-color: rgba(56, 189, 248, 0.55);
+            background: rgba(56, 189, 248, 0.08);
+        }
+
+        .doc-toolbar-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .doc-toolbar-actions button {
+            padding-inline: 0.95rem;
+        }
+
+        .doc-meta-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+            color: #f1f5f9;
+        }
+
+        .doc-meta-grid label span {
+            font-size: 0.85rem;
+            color: var(--muted);
+        }
+
+        .meta-field {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            color: var(--muted);
+        }
+
+        .meta-field-label {
+            font-size: 0.85rem;
+        }
+
+        .meta-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        label {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+            font-size: 0.9rem;
+            color: var(--muted);
+        }
+
+        input, select, textarea {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(148, 163, 184, 0.25);
+            border-radius: 0.6rem;
+            padding: 0.6rem 0.75rem;
+            color: inherit;
+        }
+
+        textarea {
+            resize: vertical;
+        }
+
+        .doc-page {
+            background: #f8fafc;
+            border-radius: 1.1rem;
+            padding: 1.75rem 2.25rem;
+            box-shadow: 0 25px 40px rgba(15, 23, 42, 0.35);
+            border: 1px solid rgba(148, 163, 184, 0.15);
+        }
+
+        .quill-wrapper {
+            background: transparent;
+            border-radius: 0.75rem;
+            border: 1px solid rgba(148, 163, 184, 0.3);
+        }
+
+        #editor {
+            height: 520px;
+        }
+
+        .doc-page .ql-toolbar {
+            border-radius: 0.6rem 0.6rem 0 0;
+            background: #f1f5f9;
+        }
+
+        .doc-page .ql-container {
+            border-radius: 0 0 0.6rem 0.6rem;
+            background: #ffffff;
+            border: 1px solid rgba(148, 163, 184, 0.35);
+            border-top: none;
+        }
+
+        .doc-page .ql-editor {
+            min-height: 440px;
+            font-size: 1.05rem;
+            line-height: 1.7;
+            color: #0f172a;
+        }
+
+        .doc-page .ql-editor p {
+            margin: 0 0 0.95rem;
+        }
+
+        .doc-meta-grid label {
+            color: var(--muted);
+        }
+
+        .chip-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .chip {
+            background: rgba(148, 163, 184, 0.15);
+            border-radius: 999px;
+            padding: 0.4rem 0.75rem;
+            font-size: 0.75rem;
+        }
+
+        .character-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1rem;
+        }
+
+        .character-card {
+            background: rgba(30, 41, 59, 0.6);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            border-radius: 0.9rem;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .character-card img {
+            width: 100%;
+            border-radius: 0.75rem;
+            aspect-ratio: 4/5;
+            object-fit: cover;
+        }
+
+        .tag {
+            display: inline-flex;
+            background: rgba(56, 189, 248, 0.15);
+            border-radius: 999px;
+            padding: 0.3rem 0.65rem;
+            font-size: 0.75rem;
+            margin-right: 0.35rem;
+        }
+
+        .inline-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.5rem;
+        }
+
+        .inline-actions button,
+        .doc-toolbar-actions button,
+        .outline-actions button {
+            all: unset;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.55rem 0.95rem;
+            border-radius: 0.6rem;
+            cursor: pointer;
+            background: rgba(56, 189, 248, 0.18);
+            border: 1px solid rgba(56, 189, 248, 0.35);
+            color: inherit;
+            transition: transform 0.2s ease, border 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .inline-actions button.danger,
+        .doc-toolbar-actions button.danger,
+        .outline-actions button.danger {
+            background: rgba(248, 113, 113, 0.18);
+            border-color: rgba(248, 113, 113, 0.35);
+        }
+
+        .inline-actions button:hover,
+        .doc-toolbar-actions button:hover,
+        .outline-actions button:hover {
+            transform: translateY(-1px);
+            border-color: rgba(56, 189, 248, 0.55);
+            box-shadow: 0 6px 18px rgba(56, 189, 248, 0.15);
+        }
+
+        .inline-actions button.danger:hover,
+        .doc-toolbar-actions button.danger:hover,
+        .outline-actions button.danger:hover {
+            border-color: rgba(248, 113, 113, 0.55);
+            box-shadow: 0 6px 18px rgba(248, 113, 113, 0.18);
+        }
+
+        #timeline {
+            height: 280px;
+            border-radius: 0.75rem;
+            background: rgba(30, 41, 59, 0.4);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+        }
+
+        #relationship-map {
+            height: 400px;
+            border-radius: 0.75rem;
+            background: rgba(30, 41, 59, 0.45);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+        }
+
+        .list-inline {
+            display: flex;
+            gap: 0.35rem;
+            flex-wrap: wrap;
+            margin-top: 0.5rem;
+        }
+
+        .list-inline span {
+            background: rgba(148, 163, 184, 0.15);
+            border-radius: 999px;
+            padding: 0.25rem 0.6rem;
+            font-size: 0.75rem;
+        }
+
+        .outline-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        @media (max-width: 1080px) {
+            body {
+                grid-template-columns: 1fr;
+            }
+
+            nav {
+                flex-direction: column;
+                align-items: stretch;
+                position: sticky;
+                top: 0;
+                z-index: 10;
+            }
+
+            .tab-buttons {
+                flex-direction: row;
+                flex-wrap: wrap;
+            }
+
+            nav button {
+                flex: 1 1 45%;
+                text-align: center;
+            }
+
+            .doc-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .scene-outline {
+                order: 2;
+                flex-direction: column;
+            }
+
+            main {
+                padding: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="brand">
+            <h1>Story Nexus</h1>
+            <p>Local-first workspace for writers</p>
+        </div>
+        <div class="tab-buttons">
+            <button data-tab-target="writing" class="active">Writing Desk</button>
+            <button data-tab-target="plotlines">Plotlines & Timeline</button>
+            <button data-tab-target="characters">Character Gallery</button>
+            <button data-tab-target="relationships">Relationship Map</button>
+        </div>
+        <div class="nav-actions">
+            <button id="export-data">Export JSON</button>
+            <label class="import-label">
+                <span>Import JSON</span>
+                <input id="import-data" type="file" accept="application/json" />
+            </label>
+            <button id="reset-workspace" class="danger">Reset Workspace</button>
+        </div>
+    </nav>
+    <main>
+        <section class="panel tab-panel active" data-tab="writing">
+            <div class="doc-layout">
+                <aside class="scene-outline">
+                    <div class="outline-header">
+                        <h3>Scenes</h3>
+                        <div class="outline-actions">
+                            <button id="new-scene">New Scene</button>
+                        </div>
+                    </div>
+                    <div class="scene-list" id="scene-list"></div>
+                </aside>
+                <div class="doc-surface">
+                    <div class="doc-toolbar">
+                        <input id="scene-title" class="doc-title-input" placeholder="Untitled scene" />
+                        <div class="doc-toolbar-actions">
+                            <button id="duplicate-scene">Duplicate</button>
+                            <button id="delete-scene" class="danger">Delete</button>
+                        </div>
+                    </div>
+                    <div class="doc-meta-grid">
+                        <label>
+                            <span>Plotline</span>
+                            <select id="scene-plotline"></select>
+                        </label>
+                        <label>
+                            <span>Scene Date</span>
+                            <input id="scene-date" type="date" />
+                        </label>
+                        <div class="meta-field">
+                            <span class="meta-field-label">Characters in Scene</span>
+                            <div id="scene-characters" class="chip-list checkbox-list"></div>
+                        </div>
+                    </div>
+                    <div class="doc-page">
+                        <div class="quill-wrapper">
+                            <div id="editor"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="panel tab-panel" data-tab="plotlines">
+            <h2>Plotlines & Timeline</h2>
+            <div class="meta-group">
+                <label>
+                    Plotline Name
+                    <input id="plotline-name" placeholder="e.g. Hero's Journey" />
+                </label>
+                <label>
+                    Color
+                    <input id="plotline-color" type="color" value="#38bdf8" />
+                </label>
+                <label>
+                    Description
+                    <textarea id="plotline-description" rows="3" placeholder="Purpose, beats, stakes..."></textarea>
+                </label>
+            </div>
+            <div class="inline-actions" style="margin-bottom: 1rem;">
+                <button id="add-plotline">Add Plotline</button>
+            </div>
+            <div class="list-inline" id="plotline-pills"></div>
+            <div id="timeline"></div>
+        </section>
+
+        <section class="panel tab-panel" data-tab="characters">
+            <h2>Character Gallery</h2>
+            <div class="meta-group">
+                <label>
+                    Name
+                    <input id="character-name" placeholder="Character name" />
+                </label>
+                <label>
+                    Role / Tags (comma separated)
+                    <input id="character-tags" placeholder="protagonist, mentor" />
+                </label>
+                <label>
+                    Upload Portrait
+                    <input id="character-image" type="file" accept="image/*" />
+                </label>
+            </div>
+            <label>
+                Bio / Notes
+                <textarea id="character-bio" rows="3" placeholder="Backstory, goals, secrets..."></textarea>
+            </label>
+            <div class="inline-actions" style="margin-top: 1rem;">
+                <button id="add-character">Add Character</button>
+            </div>
+            <div class="character-grid" id="character-grid" style="margin-top: 1.5rem;"></div>
+        </section>
+
+        <section class="panel tab-panel" data-tab="relationships">
+            <h2>Relationship Map</h2>
+            <div class="meta-group">
+                <label>
+                    Node Type
+                    <select id="node-type">
+                        <option value="character">Character</option>
+                        <option value="plotline">Plotline</option>
+                        <option value="scene">Scene</option>
+                        <option value="place">Place / Location</option>
+                        <option value="event">Event</option>
+                    </select>
+                </label>
+                <label>
+                    Node Name
+                    <input id="node-name" placeholder="Name" />
+                </label>
+                <label>
+                    Node Notes
+                    <textarea id="node-notes" rows="2" placeholder="Context"></textarea>
+                </label>
+            </div>
+            <div class="inline-actions" style="margin-bottom: 1rem;">
+                <button id="add-node">Add Map Node</button>
+            </div>
+
+            <div class="meta-group">
+                <label>
+                    Source
+                    <select id="edge-source"></select>
+                </label>
+                <label>
+                    Relationship Type
+                    <input id="edge-type" placeholder="ally, conflict, appears in" />
+                </label>
+                <label>
+                    Target
+                    <select id="edge-target"></select>
+                </label>
+            </div>
+            <div class="inline-actions" style="margin-bottom: 1rem;">
+                <button id="add-edge">Add Connection</button>
+            </div>
+            <div id="relationship-map"></div>
+        </section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.min.js"></script>
+    <script src="https://unpkg.com/vis-timeline@7.7.1/standalone/umd/vis-timeline-graph2d.min.js"></script>
+    <script src="https://unpkg.com/cytoscape@3.26.0/dist/cytoscape.min.js"></script>
+    <script>
+        const createId = () => (crypto.randomUUID ? crypto.randomUUID() : "id-" + Math.random().toString(36).slice(2, 10));
+        const deepClone = typeof structuredClone === "function" ? structuredClone : (input) => JSON.parse(JSON.stringify(input));
+
+        const STORAGE_KEY = "story-nexus-workspace";
+
+        const defaultState = {
+            scenes: [],
+            characters: [],
+            plotlines: [],
+            graphNodes: [],
+            graphEdges: []
+        };
+
+        let state = loadState();
+        let activeSceneId = state.scenes[0]?.id ?? null;
+
+        const quill = new Quill("#editor", {
+            theme: "snow",
+            placeholder: "Start drafting your scene...",
+            modules: {
+                toolbar: [
+                    [{ header: [1, 2, 3, false] }],
+                    ["bold", "italic", "underline", "strike"],
+                    [{ list: "ordered" }, { list: "bullet" }],
+                    ["blockquote", "code-block"],
+                    ["link", "image"],
+                    [{ color: [] }, { background: [] }],
+                    ["clean"]
+                ]
+            }
+        });
+
+        quill.on("text-change", () => {
+            if (!activeSceneId) return;
+            const scene = state.scenes.find((s) => s.id === activeSceneId);
+            if (!scene) return;
+            scene.delta = quill.getContents();
+            scene.html = quill.root.innerHTML;
+            scene.wordCount = quill.getText().trim().split(/\s+/).filter(Boolean).length;
+            saveState();
+            renderSceneList();
+            renderTimeline();
+        });
+
+        function loadState() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                if (!raw) return deepClone(defaultState);
+                const parsed = JSON.parse(raw);
+                return { ...deepClone(defaultState), ...parsed };
+            } catch (error) {
+                console.error("Failed to load workspace", error);
+                return deepClone(defaultState);
+            }
+        }
+
+        function saveState() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        }
+
+        function setActiveScene(sceneId) {
+            activeSceneId = sceneId;
+            renderSceneList();
+            const scene = state.scenes.find((s) => s.id === sceneId);
+            const titleInput = document.getElementById("scene-title");
+            const plotlineSelect = document.getElementById("scene-plotline");
+            const dateInput = document.getElementById("scene-date");
+
+            if (!scene) {
+                titleInput.value = "";
+                plotlineSelect.value = "";
+                dateInput.value = "";
+                quill.setContents([]);
+                updateSceneCharacters();
+                return;
+            }
+
+            titleInput.value = scene.title;
+            plotlineSelect.value = scene.plotlineId || "";
+            dateInput.value = scene.date || "";
+            quill.setContents(scene.delta || []);
+            updateSceneCharacters(scene.characterIds || []);
+        }
+
+        function renderSceneList() {
+            const container = document.getElementById("scene-list");
+            container.innerHTML = "";
+            if (!state.scenes.length) {
+                const empty = document.createElement("p");
+                empty.style.color = "var(--muted)";
+                empty.textContent = "No scenes yet. Create one to begin.";
+                container.appendChild(empty);
+                return;
+            }
+
+            state.scenes
+                .slice()
+                .sort((a, b) => (a.createdAt || "").localeCompare(b.createdAt || ""))
+                .forEach((scene) => {
+                    const card = document.createElement("div");
+                    card.className = "scene-card" + (scene.id === activeSceneId ? " active" : "");
+                    card.innerHTML = `
+                        <strong>${scene.title || "Untitled Scene"}</strong>
+                        <div style="font-size:0.8rem; color: var(--muted); margin-top:0.35rem;">
+                            <span>${scene.wordCount || 0} words</span>
+                            ${scene.plotlineId ? `<span style="margin-left:0.5rem; color:${plotlineColor(scene.plotlineId)};">? ${plotlineName(scene.plotlineId)}</span>` : ""}
+                            ${scene.date ? `<span style="margin-left:0.5rem;">${scene.date}</span>` : ""}
+                        </div>
+                    `;
+                    card.addEventListener("click", () => setActiveScene(scene.id));
+                    container.appendChild(card);
+                });
+        }
+
+        function plotlineName(plotlineId) {
+            return state.plotlines.find((p) => p.id === plotlineId)?.name || "";
+        }
+
+        function plotlineColor(plotlineId) {
+            return state.plotlines.find((p) => p.id === plotlineId)?.color || "var(--muted)";
+        }
+
+        function renderPlotlinePicker() {
+            const select = document.getElementById("scene-plotline");
+            select.innerHTML = `<option value="">No plotline</option>` +
+                state.plotlines.map((plot) => `<option value="${plot.id}">${plot.name}</option>`).join("");
+        }
+
+        function updateSceneCharacters(selectedIds = []) {
+            const container = document.getElementById("scene-characters");
+            container.innerHTML = "";
+            if (!state.characters.length) {
+                const hint = document.createElement("p");
+                hint.style.color = "var(--muted)";
+                hint.textContent = "Create characters first to link them.";
+                container.appendChild(hint);
+                return;
+            }
+
+            state.characters.forEach((character) => {
+                const label = document.createElement("label");
+                label.style.flexDirection = "row";
+                label.style.alignItems = "center";
+                label.style.gap = "0.5rem";
+                label.style.color = "inherit";
+                const input = document.createElement("input");
+                input.type = "checkbox";
+                input.checked = selectedIds.includes(character.id);
+                input.addEventListener("change", (event) => {
+                    const scene = state.scenes.find((s) => s.id === activeSceneId);
+                    if (!scene) return;
+                    scene.characterIds = scene.characterIds || [];
+                    if (event.target.checked) {
+                        if (!scene.characterIds.includes(character.id)) {
+                            scene.characterIds.push(character.id);
+                        }
+                    } else {
+                        scene.characterIds = scene.characterIds.filter((id) => id !== character.id);
+                    }
+                    saveState();
+                });
+                label.appendChild(input);
+                const span = document.createElement("span");
+                span.className = "chip";
+                span.textContent = character.name;
+                label.appendChild(span);
+                container.appendChild(label);
+            });
+        }
+
+        function renderCharacters() {
+            const grid = document.getElementById("character-grid");
+            grid.innerHTML = "";
+            if (!state.characters.length) {
+                const empty = document.createElement("p");
+                empty.style.color = "var(--muted)";
+                empty.textContent = "No characters yet. Add one above.";
+                grid.appendChild(empty);
+                return;
+            }
+
+            state.characters.forEach((character) => {
+                const card = document.createElement("div");
+                card.className = "character-card";
+                card.innerHTML = `
+                    ${character.image ? `<img src="${character.image}" alt="${character.name}" />` : ""}
+                    <div>
+                        <strong style="font-size:1.05rem;">${character.name}</strong>
+                        <div class="list-inline">
+                            ${(character.tags || []).map((tag) => `<span>${tag}</span>`).join("")}
+                        </div>
+                    </div>
+                    <p style="color: var(--muted); font-size: 0.9rem; white-space: pre-line;">${character.bio || ""}</p>
+                    <div class="inline-actions">
+                        <button data-id="${character.id}" class="character-edit">Edit</button>
+                        <button data-id="${character.id}" class="danger character-delete">Remove</button>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+
+            grid.querySelectorAll(".character-delete").forEach((btn) => {
+                btn.addEventListener("click", () => {
+                    const id = btn.getAttribute("data-id");
+                    state.characters = state.characters.filter((c) => c.id !== id);
+                    state.scenes.forEach((scene) => {
+                        scene.characterIds = (scene.characterIds || []).filter((cid) => cid !== id);
+                    });
+                    removeGraphNode(id);
+                    saveState();
+                    renderCharacters();
+                    updateSceneCharacters();
+                    renderSceneList();
+                    renderGraph();
+                });
+            });
+
+            grid.querySelectorAll(".character-edit").forEach((btn) => {
+                btn.addEventListener("click", () => {
+                    const id = btn.getAttribute("data-id");
+                    const character = state.characters.find((c) => c.id === id);
+                    if (!character) return;
+                    document.getElementById("character-name").value = character.name;
+                    document.getElementById("character-tags").value = character.tags?.join(", ") || "";
+                    document.getElementById("character-bio").value = character.bio || "";
+                    document.getElementById("character-name").dataset.editingId = id;
+                });
+            });
+        }
+
+        function renderPlotlines() {
+            renderPlotlinePicker();
+            const pills = document.getElementById("plotline-pills");
+            pills.innerHTML = "";
+            if (!state.plotlines.length) {
+                const empty = document.createElement("p");
+                empty.style.color = "var(--muted)";
+                empty.textContent = "No plotlines yet. Add one above.";
+                pills.appendChild(empty);
+                return;
+            }
+
+            state.plotlines.forEach((plot) => {
+                const pill = document.createElement("div");
+                pill.style.background = "rgba(30, 41, 59, 0.6)";
+                pill.style.border = `1px solid ${plot.color || "rgba(148, 163, 184, 0.2)"}`;
+                pill.style.padding = "0.75rem";
+                pill.style.borderRadius = "0.75rem";
+                pill.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; align-items:center; gap:0.75rem;">
+                        <div>
+                            <strong>${plot.name}</strong>
+                            <p style="margin:0.35rem 0 0; font-size:0.85rem; color:var(--muted);">${plot.description || ""}</p>
+                        </div>
+                        <div class="inline-actions">
+                            <button data-id="${plot.id}" class="plotline-delete danger">Delete</button>
+                        </div>
+                    </div>
+                `;
+                pills.appendChild(pill);
+            });
+
+            pills.querySelectorAll(".plotline-delete").forEach((btn) => {
+                btn.addEventListener("click", () => {
+                    const id = btn.getAttribute("data-id");
+                    state.plotlines = state.plotlines.filter((plot) => plot.id !== id);
+                    state.scenes.forEach((scene) => {
+                        if (scene.plotlineId === id) scene.plotlineId = null;
+                    });
+                    removeGraphNode(id);
+                    saveState();
+                    renderPlotlines();
+                    renderSceneList();
+                    renderTimeline();
+                    renderGraph();
+                });
+            });
+        }
+
+        let timeline;
+
+        function initTimeline() {
+            const container = document.getElementById("timeline");
+            if (!container) return;
+            timeline = new vis.Timeline(container, new vis.DataSet([]), new vis.DataSet([]), {
+                stack: true,
+                horizontalScroll: true,
+                verticalScroll: true,
+                zoomKey: "ctrlKey",
+                orientation: "both",
+                margin: { item: 20, axis: 40 }
+            });
+            renderTimeline();
+        }
+
+        function renderTimeline() {
+            if (!timeline) return;
+            const groups = new vis.DataSet(
+                state.plotlines.map((plot) => ({
+                    id: plot.id,
+                    content: `<span style="color:${plot.color}">?</span> ${plot.name}`
+                }))
+            );
+            timeline.setGroups(groups);
+
+            const items = state.scenes.map((scene) => ({
+                id: scene.id,
+                content: scene.title || "Untitled Scene",
+                start: scene.date ? new Date(scene.date) : new Date(scene.createdAt || Date.now()),
+                group: scene.plotlineId || null,
+                style: `border-color:${scene.plotlineId ? plotlineColor(scene.plotlineId) : "var(--muted)"};`
+            }));
+            timeline.setItems(new vis.DataSet(items));
+        }
+
+        let cy;
+
+        function initGraph() {
+            cy = cytoscape({
+                container: document.getElementById("relationship-map"),
+                elements: [],
+                style: [
+                    {
+                        selector: "node",
+                        style: {
+                            "background-color": "data(color)",
+                            label: "data(label)",
+                            color: "#e2e8f0",
+                            "font-size": 12,
+                            "text-valign": "center",
+                            "text-outline-width": 1,
+                            "text-outline-color": "rgba(15,23,42,0.8)",
+                            width: "mapData(size, 30, 90, 30, 80)",
+                            height: "mapData(size, 30, 90, 30, 80)",
+                            "border-width": 2,
+                            "border-color": "rgba(148,163,184,0.4)"
+                        }
+                    },
+                    {
+                        selector: "edge",
+                        style: {
+                            width: 2,
+                            "line-color": "rgba(148,163,184,0.6)",
+                            "target-arrow-color": "rgba(148,163,184,0.8)",
+                            "target-arrow-shape": "triangle",
+                            label: "data(label)",
+                            "font-size": 10,
+                            color: "#94a3b8",
+                            "curve-style": "bezier"
+                        }
+                    }
+                ],
+                layout: { name: "cose", idealEdgeLength: 120, padding: 50 }
+            });
+
+            cy.on("tap", "node", (evt) => {
+                const node = evt.target;
+                const data = node.data();
+                if (data.notes) {
+                    alert(`${data.label} -> ${data.notes}`);
+                }
+            });
+
+            renderGraph();
+        }
+
+        function renderGraph() {
+            if (!cy) return;
+            const elements = [];
+            const seen = new Set();
+
+            const addNode = (node) => {
+                if (seen.has(node.id)) return;
+                seen.add(node.id);
+                elements.push({ data: node });
+            };
+
+            state.graphNodes.forEach((node) => addNode(node));
+
+            state.characters.forEach((character) => {
+                addNode({
+                    id: character.id,
+                    label: character.name,
+                    type: "character",
+                    color: "#38bdf8",
+                    size: 70,
+                    notes: character.bio?.slice(0, 120) || ""
+                });
+            });
+
+            state.plotlines.forEach((plot) => {
+                addNode({
+                    id: plot.id,
+                    label: plot.name,
+                    type: "plotline",
+                    color: plot.color || "#fde68a",
+                    size: 60,
+                    notes: plot.description?.slice(0, 120) || ""
+                });
+            });
+
+            state.scenes.forEach((scene) => {
+                addNode({
+                    id: scene.id,
+                    label: scene.title || "Scene",
+                    type: "scene",
+                    color: "#a855f7",
+                    size: 55,
+                    notes: (scene.summary || scene.html?.replace(/<[^>]+>/g, " ").slice(0, 120) || "").trim()
+                });
+
+                (scene.characterIds || []).forEach((characterId) => {
+                    elements.push({
+                        data: {
+                            id: `edge-${scene.id}-${characterId}`,
+                            source: characterId,
+                            target: scene.id,
+                            label: "appears in"
+                        }
+                    });
+                });
+
+                if (scene.plotlineId) {
+                    elements.push({
+                        data: {
+                            id: `edge-${scene.id}-${scene.plotlineId}`,
+                            source: scene.id,
+                            target: scene.plotlineId,
+                            label: "in plotline"
+                        }
+                    });
+                }
+            });
+
+            state.graphEdges.forEach((edge) => {
+                elements.push({ data: edge });
+            });
+
+            cy.elements().remove();
+            cy.add(elements);
+            cy.layout({ name: "cose", idealEdgeLength: 120, padding: 50 }).run();
+            populateEdgeSelectors();
+        }
+
+        function removeGraphNode(nodeId) {
+            state.graphNodes = state.graphNodes.filter((node) => node.id !== nodeId);
+            state.graphEdges = state.graphEdges.filter((edge) => edge.source !== nodeId && edge.target !== nodeId);
+        }
+
+        function populateEdgeSelectors() {
+            const source = document.getElementById("edge-source");
+            const target = document.getElementById("edge-target");
+            const options = [];
+
+            const collectNode = (id, label, type) => {
+                options.push(`<option value="${id}">${label} (${type})</option>`);
+            };
+
+            state.graphNodes.forEach((node) => collectNode(node.id, node.label, node.type));
+            state.characters.forEach((c) => collectNode(c.id, c.name, "character"));
+            state.plotlines.forEach((p) => collectNode(p.id, p.name, "plotline"));
+            state.scenes.forEach((s) => collectNode(s.id, s.title || "Scene", "scene"));
+
+            source.innerHTML = options.join("");
+            target.innerHTML = options.join("");
+        }
+
+        function initTabs() {
+            const buttons = document.querySelectorAll('[data-tab-target]');
+            const panels = document.querySelectorAll('.tab-panel');
+
+            const activate = (target) => {
+                buttons.forEach((btn) => btn.classList.toggle('active', btn.dataset.tabTarget === target));
+                panels.forEach((panel) => panel.classList.toggle('active', panel.dataset.tab === target));
+
+                if (target === 'plotlines' && timeline) {
+                    setTimeout(() => {
+                        timeline.redraw();
+                        try {
+                            timeline.fit();
+                        } catch (error) {
+                            console.debug('Timeline fit skipped', error);
+                        }
+                    }, 50);
+                }
+
+                if (target === 'relationships' && cy) {
+                    setTimeout(() => {
+                        cy.resize();
+                        cy.fit();
+                    }, 60);
+                }
+
+                if (target === 'writing') {
+                    setTimeout(() => {
+                        quill.focus();
+                    }, 80);
+                }
+            };
+
+            buttons.forEach((button) => {
+                button.addEventListener('click', () => activate(button.dataset.tabTarget));
+            });
+
+            const initial = document.querySelector('[data-tab-target].active')?.dataset.tabTarget || 'writing';
+            activate(initial);
+        }
+
+        document.getElementById("new-scene").addEventListener("click", () => {
+            const id = createId();
+            const scene = {
+                id,
+                title: "Untitled Scene",
+                delta: [],
+                html: "",
+                plotlineId: null,
+                characterIds: [],
+                date: "",
+                createdAt: new Date().toISOString()
+            };
+            state.scenes.push(scene);
+            saveState();
+            setActiveScene(id);
+            renderSceneList();
+            renderTimeline();
+            renderGraph();
+        });
+
+        document.getElementById("duplicate-scene").addEventListener("click", () => {
+            const scene = state.scenes.find((s) => s.id === activeSceneId);
+            if (!scene) return;
+            const id = createId();
+            const copy = {
+                ...deepClone(scene),
+                id,
+                title: scene.title + " (Copy)",
+                createdAt: new Date().toISOString()
+            };
+            state.scenes.push(copy);
+            saveState();
+            renderSceneList();
+            renderTimeline();
+            setActiveScene(id);
+            renderGraph();
+        });
+
+        document.getElementById("delete-scene").addEventListener("click", () => {
+            if (!activeSceneId) return;
+            if (!confirm("Delete this scene?")) return;
+            state.scenes = state.scenes.filter((s) => s.id !== activeSceneId);
+            removeGraphNode(activeSceneId);
+            activeSceneId = state.scenes[0]?.id || null;
+            saveState();
+            setActiveScene(activeSceneId);
+            renderSceneList();
+            renderTimeline();
+            renderGraph();
+        });
+
+        document.getElementById("scene-title").addEventListener("input", (event) => {
+            const scene = state.scenes.find((s) => s.id === activeSceneId);
+            if (!scene) return;
+            scene.title = event.target.value;
+            saveState();
+            renderSceneList();
+            renderTimeline();
+            renderGraph();
+        });
+
+        document.getElementById("scene-plotline").addEventListener("change", (event) => {
+            const scene = state.scenes.find((s) => s.id === activeSceneId);
+            if (!scene) return;
+            scene.plotlineId = event.target.value || null;
+            saveState();
+            renderSceneList();
+            renderTimeline();
+            renderGraph();
+        });
+
+        document.getElementById("scene-date").addEventListener("change", (event) => {
+            const scene = state.scenes.find((s) => s.id === activeSceneId);
+            if (!scene) return;
+            scene.date = event.target.value;
+            saveState();
+            renderSceneList();
+            renderTimeline();
+            renderGraph();
+        });
+
+        document.getElementById("add-plotline").addEventListener("click", () => {
+            const name = document.getElementById("plotline-name").value.trim();
+            const color = document.getElementById("plotline-color").value;
+            const description = document.getElementById("plotline-description").value.trim();
+            if (!name) {
+                alert("Plotline name required");
+                return;
+            }
+            const plotline = { id: createId(), name, color, description };
+            state.plotlines.push(plotline);
+            addGraphNodeFromPlotline(plotline);
+            saveState();
+            document.getElementById("plotline-name").value = "";
+            document.getElementById("plotline-description").value = "";
+            renderPlotlines();
+            renderTimeline();
+            renderGraph();
+        });
+
+        function addGraphNodeFromPlotline(plotline) {
+            state.graphNodes.push({
+                id: plotline.id,
+                label: plotline.name,
+                type: "plotline",
+                color: plotline.color || "#fde68a",
+                size: 60,
+                notes: plotline.description?.slice(0, 120) || ""
+            });
+        }
+
+        document.getElementById("character-image").addEventListener("change", handleCharacterImage);
+
+        let characterImageData = null;
+
+        function handleCharacterImage(event) {
+            const file = event.target.files?.[0];
+            if (!file) {
+                characterImageData = null;
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                characterImageData = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        document.getElementById("add-character").addEventListener("click", () => {
+            const nameInput = document.getElementById("character-name");
+            const bioInput = document.getElementById("character-bio");
+            const tagsInput = document.getElementById("character-tags");
+            const editingId = nameInput.dataset.editingId;
+
+            const name = nameInput.value.trim();
+            if (!name) {
+                alert("Character name required");
+                return;
+            }
+
+            const character = {
+                id: editingId || createId(),
+                name,
+                bio: bioInput.value.trim(),
+                tags: tagsInput.value.split(",").map((tag) => tag.trim()).filter(Boolean),
+                image: characterImageData
+            };
+
+            if (editingId) {
+                const index = state.characters.findIndex((c) => c.id === editingId);
+                if (index !== -1) {
+                    if (!character.image) {
+                        character.image = state.characters[index].image;
+                    }
+                    state.characters[index] = character;
+                }
+                delete nameInput.dataset.editingId;
+            } else {
+                state.characters.push(character);
+            }
+
+            addGraphNodeFromCharacter(character);
+            characterImageData = null;
+            document.getElementById("character-image").value = "";
+            nameInput.value = "";
+            bioInput.value = "";
+            tagsInput.value = "";
+            saveState();
+            renderCharacters();
+            updateSceneCharacters();
+            renderGraph();
+        });
+
+        function addGraphNodeFromCharacter(character) {
+            if (state.graphNodes.some((node) => node.id === character.id)) return;
+            state.graphNodes.push({
+                id: character.id,
+                label: character.name,
+                type: "character",
+                color: "#38bdf8",
+                size: 70,
+                notes: character.bio?.slice(0, 120) || ""
+            });
+        }
+
+        document.getElementById("add-node").addEventListener("click", () => {
+            const type = document.getElementById("node-type").value;
+            const name = document.getElementById("node-name").value.trim();
+            const notes = document.getElementById("node-notes").value.trim();
+            if (!name) {
+                alert("Node name required");
+                return;
+            }
+            const colorMap = {
+                character: "#38bdf8",
+                plotline: "#fde68a",
+                scene: "#a855f7",
+                place: "#34d399",
+                event: "#f97316"
+            };
+            const node = {
+                id: createId(),
+                label: name,
+                type,
+                notes,
+                color: colorMap[type] || "#94a3b8",
+                size: 55
+            };
+            state.graphNodes.push(node);
+            saveState();
+            document.getElementById("node-name").value = "";
+            document.getElementById("node-notes").value = "";
+            renderGraph();
+        });
+
+        document.getElementById("add-edge").addEventListener("click", () => {
+            const source = document.getElementById("edge-source").value;
+            const target = document.getElementById("edge-target").value;
+            const label = document.getElementById("edge-type").value.trim() || "related";
+            if (!source || !target || source === target) {
+                alert("Choose two different nodes");
+                return;
+            }
+            const edge = {
+                id: `edge-${createId()}`,
+                source,
+                target,
+                label
+            };
+            state.graphEdges.push(edge);
+            saveState();
+            document.getElementById("edge-type").value = "";
+            renderGraph();
+        });
+
+        document.getElementById("export-data").addEventListener("click", () => {
+            const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `story-nexus-${new Date().toISOString().slice(0, 10)}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        });
+
+        document.getElementById("import-data").addEventListener("change", (event) => {
+            const file = event.target.files?.[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const parsed = JSON.parse(e.target.result);
+                    state = { ...deepClone(defaultState), ...parsed };
+                    saveState();
+                    activeSceneId = state.scenes[0]?.id || null;
+                    initAll();
+                    alert("Workspace imported.");
+                } catch (error) {
+                    alert("Import failed: " + error.message);
+                }
+            };
+            reader.readAsText(file);
+        });
+
+        document.getElementById("reset-workspace").addEventListener("click", () => {
+            if (!confirm("Reset and clear all local workspace data?")) return;
+            localStorage.removeItem(STORAGE_KEY);
+            state = deepClone(defaultState);
+            activeSceneId = null;
+            initAll();
+        });
+
+        function initAll() {
+            renderPlotlines();
+            renderSceneList();
+            renderCharacters();
+            populateEdgeSelectors();
+            updateSceneCharacters(state.scenes.find((s) => s.id === activeSceneId)?.characterIds || []);
+            setActiveScene(activeSceneId);
+            renderTimeline();
+            renderGraph();
+        }
+
+        initTimeline();
+        initGraph();
+        initTabs();
+        initAll();
+
+        if (!activeSceneId && state.scenes.length) {
+            setActiveScene(state.scenes[0].id);
+        }
+    </script>
+</body>
+</html>
